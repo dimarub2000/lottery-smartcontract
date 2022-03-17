@@ -9,18 +9,16 @@ contract Lottery is VRFConsumerBase, KeeperCompatibleInterface, Ownable {
     address payable[] public players;
     address payable public recentWinner;
 
-    address public vrfCoordinator = 0xa555fC018435bef5A13C6c6870a9d4C11DEC329C;
-    address public link = 0x84b9B910527Ad5C03A9Ca831909E21e236EA7b06;
-
-    bytes32 public keyHash = 0xcaf3c3727e033261d383b315559476f48034c13b18f8cafed4d871abe5049186;
-    uint256 public fee = 0.1 * 10 ** 18;
-
     event RequestedRandomness(bytes32 requestId);
     event newPlayer(address player);
     event PaidWinner(address from, address winner);
+    event LotteryFinished();
+    event LotteryStarted();
 
-    uint public immutable interval;
-    uint public lastTimeStamp;
+    uint256 public immutable interval;
+    uint256 public lastTimeStamp;
+    uint256 public fee;
+    bytes32 public keyHash;
 
     enum LOTTERY_STATE {
         OPEN,
@@ -29,8 +27,16 @@ contract Lottery is VRFConsumerBase, KeeperCompatibleInterface, Ownable {
     }
     LOTTERY_STATE public lotteryState;
 
-    constructor(uint updateInterval) VRFConsumerBase(vrfCoordinator, link) {
-        interval = updateInterval;
+    constructor(
+        address _vrfCoordinator,
+        address _link,
+        uint256 _fee,
+        bytes32 _keyHash,
+        uint256 _updateInterval
+     ) VRFConsumerBase(_vrfCoordinator, _link) {
+        fee = _fee;
+        keyHash = _keyHash;
+        interval = _updateInterval;
         lotteryState = LOTTERY_STATE.CLOSED;
     }
 
@@ -44,6 +50,7 @@ contract Lottery is VRFConsumerBase, KeeperCompatibleInterface, Ownable {
         require(lotteryState == LOTTERY_STATE.CLOSED, "Can't start a new lottery yet!");
         lastTimeStamp = block.timestamp;
         lotteryState = LOTTERY_STATE.OPEN;
+        emit LotteryStarted();
     }
 
     function endLotteryInternal() internal {
@@ -53,6 +60,7 @@ contract Lottery is VRFConsumerBase, KeeperCompatibleInterface, Ownable {
             emit RequestedRandomness(requestId);
         } else {
             lotteryState = LOTTERY_STATE.CLOSED;
+            emit LotteryFinished();
         }
     }
 
@@ -71,6 +79,7 @@ contract Lottery is VRFConsumerBase, KeeperCompatibleInterface, Ownable {
 
         players = new address payable[](0);
         lotteryState = LOTTERY_STATE.CLOSED;
+        emit LotteryFinished();
     }
 
     function checkUpkeep(bytes calldata /* checkData */) external view override returns (bool upkeepNeeded, bytes memory /* performData */) {
