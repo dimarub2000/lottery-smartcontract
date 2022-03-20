@@ -15,6 +15,5 @@ networks:
     keyhash: '0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4'
     fee: 100000000000000000
     verify: True
-    update_interval: 180
 wallets:
   from_key: ${PRIVATE_KEY}

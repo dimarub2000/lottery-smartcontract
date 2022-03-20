@@ -7,7 +7,6 @@ def deploy_lottery(network):
         config["networks"][network]["link_token"],
         config["networks"][network]["fee"],
         config["networks"][network]["keyhash"],
-        config["networks"][network]["update_interval"],
         {"from": account},
         publish_source=config["networks"][network].get("verify", False),
     )
